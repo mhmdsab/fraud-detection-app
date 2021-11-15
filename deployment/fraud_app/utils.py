@@ -64,10 +64,10 @@ def predict(scaler, clf, req):
         return False
 
 
-def check_transaction(req, engine):
+def check_transaction(req, connection):
     nameOrig = req["nameOrig"]
     step = req["step"]
-    transactions = engine.execute(f"SELECT * FROM transactions WHERE nameorig='{nameOrig}' AND step={step}").fetchall()
+    transactions = connection.execute(f"SELECT * FROM transactions WHERE nameorig='{nameOrig}' AND step={step}").fetchall()
     if len(transactions)>=4:
         return "Fraud"
     else:
@@ -75,7 +75,7 @@ def check_transaction(req, engine):
 
 
 
-def register_transaction(req, engine, transaction_prediction):
+def register_transaction(req, connection, transaction_prediction):
     step = req["step"]
     type_ = req["type"]
     nameOrig = req["nameOrig"]
@@ -86,7 +86,7 @@ def register_transaction(req, engine, transaction_prediction):
     oldbalanceDest = req["oldbalanceDest"]
     newbalanceDest = req["newbalanceDest"]
     
-    registeration = engine.execute(f'''INSERT INTO transactions (step, type, amount, nameorig, oldbalanceorig, 
+    registeration = connection.execute(f'''INSERT INTO transactions (step, type, amount, nameorig, oldbalanceorig, 
                                                                  newbalanceorig, namedest, oldbalancedest, newbalancedest, 
                                                                  isfraud)
                                        VALUES ({step}, '{type_}', {amount}, '{nameOrig}', {oldbalanceOrig}, {newbalanceOrig}, 

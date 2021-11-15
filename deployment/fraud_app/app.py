@@ -17,8 +17,6 @@ app = Flask(__name__)
 clf = get_clf()
 scaler = get_scaler()
 
-db_engine = create_engine('postgresql://postgres:password@FD_postgres:5432/frauddb')
-
 
 @app.route("/")
 def hello():
@@ -27,18 +25,22 @@ def hello():
 @app.route('/is-fraud', methods=['POST'])
 def predict_transaction():
     if request.method == 'POST':
+        db_engine = create_engine('postgresql://postgres:password@FD_postgres:5432/frauddb')
+
         transaction = request.get_json()
-        transaction_check = check_transaction(transaction, db_engine)
         
-        if transaction_check == "Fraud":
-            transaction_prediction = True
+        with db_engine.connect() as connection:
+            transaction_check = check_transaction(transaction, connection)
         
-        else:  
-            transaction_prediction = predict(scaler, clf, transaction)
+            if transaction_check == "Fraud":
+               transaction_prediction = True
         
-        register_transaction(transaction, db_engine, transaction_prediction)
+            else:  
+                transaction_prediction = predict(scaler, clf, transaction)
         
-        transaction_status = {"isFraud":transaction_prediction}
+            register_transaction(transaction, connection, transaction_prediction)
+        
+            transaction_status = {"isFraud":transaction_prediction}
         
         return jsonify(transaction_status)
     else:
