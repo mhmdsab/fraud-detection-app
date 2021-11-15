@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "5000:80"
+    volumes:
+      - ./nginx/site.conf:/etc/nginx/conf.d/default.conf
+    deploy:
+      replicas: 4
+    depends_on:
+      - fraud_service
+      - postgres
+    
+  fraud_service:
+    image: mhmdsab/fraud_detection:TBM
+    volumes:
+      - ./fraud_app:/Fraud_APP
+    deploy:
+      replicas: 2
+
+  postgres:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+    volumes:
+      - ./postgres:/data/postgres
+      - ./db-init-scripts:/docker-entrypoint-initdb.d
+
+  pgadmin:
+    image: dpage/pgadmin4:4.24
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - ./pgadmin:/root/.pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+
+
+
